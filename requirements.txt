@@ -1,0 +1,16 @@
+# Enterprise Data Analyst Agent —— 核心依赖（Python 3.11）
+fastapi>=0.141.1
+uvicorn>=0.53.0
+python-dotenv>=1.2.3
+pydantic>=2.13.5
+
+langchain>=1.4.2
+langchain-core>=1.6.3
+langchain-openai>=1.6.2
+langgraph>=1.2.11
+langgraph-checkpoint>=4.2.0
+langgraph-prebuilt>=1.1.0
+
+pandas>=2.0
+numpy>=1.26
+plotly>=5.0

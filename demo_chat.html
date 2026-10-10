@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>电商数据分析 Agent · 演示</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f0f2f5; height: 100vh; display: flex; justify-content: center; padding: 24px; }
+  .app { width: 860px; display: flex; flex-direction: column; }
+  header { background: linear-gradient(135deg, #1a2a4f, #2d4a7a); color: #fff; border-radius: 14px 14px 0 0; padding: 18px 24px; }
+  header h1 { font-size: 20px; }
+  header p { font-size: 12px; opacity: .75; margin-top: 4px; }
+  .chat { flex: 1; background: #fff; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .msg { max-width: 78%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+  .user { align-self: flex-end; background: #2d4a7a; color: #fff; border-bottom-right-radius: 4px; }
+  .bot { align-self: flex-start; background: #f4f6fa; border: 1px solid #e3e8f0; color: #222; border-bottom-left-radius: 4px; }
+  .typing { color: #888; font-style: italic; }
+  .inputbar { display: flex; gap: 12px; background: #fff; padding: 16px; border-radius: 0 0 14px 14px; border-top: 1px solid #e3e8f0; }
+  .inputbar input { flex: 1; padding: 12px 14px; border: 1px solid #d5dbe5; border-radius: 10px; font-size: 14px; outline: none; }
+  .inputbar input:focus { border-color: #2d4a7a; }
+  .inputbar button { padding: 12px 26px; background: #2d4a7a; color: #fff; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; }
+  .inputbar button:disabled { opacity: .5; cursor: default; }
+  .chips { display: flex; gap: 8px; padding: 0 16px 12px; background: #fff; flex-wrap: wrap; }
+  .chips button { padding: 6px 14px; font-size: 12px; background: #eef2f8; color: #2d4a7a; border: 1px solid #d5dbe5; border-radius: 999px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>📊 电商数据分析 Agent（LangGraph）</h1>
+    <p>销售概况 · 趋势分析 · 品牌/地区 Top10 · NL2SQL 即席查询 · 口径知识 RAG · 多轮对话</p>
+  </header>
+  <div class="chat" id="chat"></div>
+  <div class="chips">
+    <button onclick="ask('你能做什么？')">你能做什么？</button>
+    <button onclick="ask('给我一份销售概况')">给我一份销售概况</button>
+    <button onclick="ask('销售额最高的5个品牌是哪些？')">销售额 Top5 品牌</button>
+    <button onclick="ask('各地区的销售额分布情况')">地区销售分布</button>
+  </div>
+  <div class="inputbar">
+    <input id="inp" placeholder="输入数据分析问题，回车发送…" onkeydown="if(event.key==='Enter')send()">
+    <button id="btn" onclick="send()">发送</button>
+  </div>
+</div>
+<script>
+const chat = document.getElementById('chat');
+function bubble(cls, text) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  d.textContent = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+function ask(q) { document.getElementById('inp').value = q; send(); }
+async function send() {
+  const inp = document.getElementById('inp'), btn = document.getElementById('btn');
+  const q = inp.value.trim();
+  if (!q || btn.disabled) return;
+  inp.value = ''; btn.disabled = true;
+  bubble('user', q);
+  const t = bubble('bot typing', 'Agent 思考中，正在调用工具…');
+  try {
+    const r = await fetch('http://127.0.0.1:8000/chat', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ message: q, thread_id: 'demo' })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail || r.statusText);
+    t.className = 'msg bot'; t.textContent = j.answer;
+  } catch (e) {
+    t.className = 'msg bot'; t.textContent = '❌ 出错了：' + e.message;
+  } finally { btn.disabled = false; inp.focus(); }
+}
+bubble('bot', '你好！我是电商数据分析 Agent，可以回答销售概况、趋势、品牌/地区排行等问题，也支持 NL2SQL 即席查询。试试下面的快捷提问 👇');
+</script>
+</body>
+</html>
